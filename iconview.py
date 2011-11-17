@@ -126,5 +126,6 @@ class PyApp(gtk.Window):
         self.upButton.set_sensitive(sensitive)
     
 
-PyApp()
-gtk.main()
+if __name__ == '__main__':
+	PyApp()
+	gtk.main()
