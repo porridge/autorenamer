@@ -40,9 +40,9 @@ class PyApp(gtk.Window):
         self.upButton.set_sensitive(False)
         toolbar.insert(self.upButton, -1)
 
-        homeButton = gtk.ToolButton(gtk.STOCK_HOME)
-        homeButton.set_is_important(True)
-        toolbar.insert(homeButton, -1)
+        self.homeButton = gtk.ToolButton(gtk.STOCK_HOME)
+        self.homeButton.set_is_important(True)
+        toolbar.insert(self.homeButton, -1)
 
         self.saveButton = gtk.ToolButton(gtk.STOCK_SAVE)
         self.saveButton.set_is_important(True)
@@ -65,19 +65,19 @@ class PyApp(gtk.Window):
         self.store = self.create_store()
         self.fill_store()
 
-        iconView = gtk.IconView(self.store)
-        iconView.set_reorderable(True)
-        iconView.set_selection_mode(gtk.SELECTION_MULTIPLE)
+        self.iconView = gtk.IconView(self.store)
+        self.iconView.set_reorderable(True)
+        self.iconView.set_selection_mode(gtk.SELECTION_MULTIPLE)
 
         self.upButton.connect("clicked", self.on_up_clicked)
-        homeButton.connect("clicked", self.on_home_clicked)
+        self.homeButton.connect("clicked", self.on_home_clicked)
 
-        iconView.set_text_column(COL_PATH)
-        iconView.set_pixbuf_column(COL_PIXBUF)
+        self.iconView.set_text_column(COL_PATH)
+        self.iconView.set_pixbuf_column(COL_PIXBUF)
 
-        iconView.connect("item-activated", self.on_item_activated)
-        sw.add(iconView)
-        iconView.grab_focus()
+        self.iconView.connect("item-activated", self.on_item_activated)
+        sw.add(self.iconView)
+        self.iconView.grab_focus()
 
         self.add(vbox)
         self.show_all()
