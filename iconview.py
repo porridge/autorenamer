@@ -88,13 +88,17 @@ class PyApp(gtk.Window):
         if self.current_directory == None:
             return
 
+        alpha_sorted = []
         for fl in os.listdir(self.current_directory):
         
             if not fl[0] == '.': 
                 if os.path.isdir(os.path.join(self.current_directory, fl)):
-                    self.store.append([fl, self.dirIcon, True])
+                    alpha_sorted.append([fl, self.dirIcon, True])
                 else:
-                    self.store.append([fl, self.fileIcon, False])             
+                    alpha_sorted.append([fl, self.fileIcon, False])
+        alpha_sorted.sort()
+        for l in alpha_sorted:
+            self.store.append(l)
         
     
 
