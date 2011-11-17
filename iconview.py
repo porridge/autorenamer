@@ -44,6 +44,16 @@ class PyApp(gtk.Window):
         homeButton.set_is_important(True)
         toolbar.insert(homeButton, -1)
 
+        self.saveButton = gtk.ToolButton(gtk.STOCK_SAVE)
+        self.saveButton.set_is_important(True)
+        self.saveButton.set_sensitive(False)
+        toolbar.insert(self.saveButton, -1)
+
+        self.discardButton = gtk.ToolButton(gtk.STOCK_CANCEL)
+        self.discardButton.set_is_important(True)
+        self.discardButton.set_sensitive(False)
+        toolbar.insert(self.discardButton, -1)
+
         self.fileIcon = self.get_icon(gtk.STOCK_FILE)
         self.dirIcon = self.get_icon(gtk.STOCK_DIRECTORY)
 
