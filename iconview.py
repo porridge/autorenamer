@@ -30,6 +30,7 @@ class PyApp(gtk.Window):
         
         self.home_directory = os.path.realpath(os.path.expanduser('~'))
         self.current_directory = self.home_directory
+        self.store_modified_handle = None
 
         vbox = gtk.VBox(False, 0)
        
@@ -46,12 +47,10 @@ class PyApp(gtk.Window):
 
         self.saveButton = gtk.ToolButton(gtk.STOCK_SAVE)
         self.saveButton.set_is_important(True)
-        self.saveButton.set_sensitive(False)
         toolbar.insert(self.saveButton, -1)
 
         self.discardButton = gtk.ToolButton(gtk.STOCK_CANCEL)
         self.discardButton.set_is_important(True)
-        self.discardButton.set_sensitive(False)
         toolbar.insert(self.discardButton, -1)
 
         self.fileIcon = self.get_icon(gtk.STOCK_FILE)
@@ -62,7 +61,7 @@ class PyApp(gtk.Window):
         sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         vbox.pack_start(sw, True, True, 0)
 
-        self.store = self.create_store()
+        self.store = gtk.ListStore(str, gtk.gdk.Pixbuf, bool)
         self.fill_store()
 
         self.iconView = gtk.IconView(self.store)
@@ -71,6 +70,7 @@ class PyApp(gtk.Window):
 
         self.upButton.connect("clicked", self.on_up_clicked)
         self.homeButton.connect("clicked", self.on_home_clicked)
+        self.discardButton.connect("clicked", self.on_discard_clicked)
 
         self.iconView.set_text_column(COL_PATH)
         self.iconView.set_pixbuf_column(COL_PIXBUF)
@@ -86,14 +86,11 @@ class PyApp(gtk.Window):
         theme = gtk.icon_theme_get_default()
         return theme.load_icon(name, 48, 0)
     
-
-    def create_store(self):
-        store = gtk.ListStore(str, gtk.gdk.Pixbuf, bool)
-        return store
-            
-    
     def fill_store(self):
+        if self.store_modified_handle:
+            self.store.disconnect(self.store_modified_handle)
         self.store.clear()
+        self.modified_store = False
 
         if self.current_directory == None:
             return
@@ -107,6 +104,8 @@ class PyApp(gtk.Window):
             self.homeButton.set_sensitive(False)
         else:
             self.homeButton.set_sensitive(True)
+        self.saveButton.set_sensitive(False)
+        self.discardButton.set_sensitive(False)
 
         alpha_sorted = []
         for fl in os.listdir(self.current_directory):
@@ -119,26 +118,42 @@ class PyApp(gtk.Window):
         alpha_sorted.sort()
         for l in alpha_sorted:
             self.store.append(l)
-        
-    
+        self.store_modified_handle = self.store.connect("row-changed", self.on_row_changed)
+
+    def on_row_changed(self, treemodel, path, treeiter):
+        self.modified_store = True
+        self.upButton.set_sensitive(False)
+        self.homeButton.set_sensitive(False)
+        self.saveButton.set_sensitive(True)
+        self.discardButton.set_sensitive(True)
 
     def on_home_clicked(self, widget):
         self.current_directory = os.path.realpath(os.path.expanduser('~'))
         self.fill_store()
-        
+
+    def on_discard_clicked(self, widget):
+	    self.fill_store()
     
     def on_item_activated(self, widget, item):
-
         model = widget.get_model()
         path = model[item][COL_PATH]
         isDir = model[item][COL_IS_DIRECTORY]
 
         if not isDir:
             return
+
+        if self.modified_store:
+            label = gtk.Label("Save or discard first!")
+            dialog = gtk.Dialog("Save or discard", self, gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+			                    (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+            dialog.vbox.pack_start(label)
+            label.show()
+            dialog.run()
+            dialog.destroy()
+            return
             
         self.current_directory = self.current_directory + os.path.sep + path
         self.fill_store()
-    
 
     def on_up_clicked(self, widget):
         self.current_directory = os.path.dirname(self.current_directory)
