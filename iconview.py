@@ -30,12 +30,12 @@ class PyApp(gtk.Window):
         
         self.current_directory = '/'
 
-        vbox = gtk.VBox(False, 0);
+        vbox = gtk.VBox(False, 0)
        
         toolbar = gtk.Toolbar()
         vbox.pack_start(toolbar, False, False, 0)
 
-        self.upButton = gtk.ToolButton(gtk.STOCK_GO_UP);
+        self.upButton = gtk.ToolButton(gtk.STOCK_GO_UP)
         self.upButton.set_is_important(True)
         self.upButton.set_sensitive(False)
         toolbar.insert(self.upButton, -1)
