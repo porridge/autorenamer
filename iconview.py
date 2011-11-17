@@ -56,6 +56,7 @@ class PyApp(gtk.Window):
         self.fill_store()
 
         iconView = gtk.IconView(self.store)
+        iconView.set_reorderable(True)
         iconView.set_selection_mode(gtk.SELECTION_MULTIPLE)
 
         self.upButton.connect("clicked", self.on_up_clicked)
@@ -78,7 +79,6 @@ class PyApp(gtk.Window):
 
     def create_store(self):
         store = gtk.ListStore(str, gtk.gdk.Pixbuf, bool)
-        store.set_sort_column_id(COL_PATH, gtk.SORT_ASCENDING)
         return store
             
     
