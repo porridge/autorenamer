@@ -28,7 +28,8 @@ class PyApp(gtk.Window):
         self.connect("destroy", gtk.main_quit)
         self.set_title("IconView")
         
-        self.current_directory = '/'
+        self.home_directory = os.path.realpath(os.path.expanduser('~'))
+        self.current_directory = self.home_directory
 
         vbox = gtk.VBox(False, 0)
        
@@ -37,7 +38,6 @@ class PyApp(gtk.Window):
 
         self.upButton = gtk.ToolButton(gtk.STOCK_GO_UP)
         self.upButton.set_is_important(True)
-        self.upButton.set_sensitive(False)
         toolbar.insert(self.upButton, -1)
 
         self.homeButton = gtk.ToolButton(gtk.STOCK_HOME)
@@ -98,6 +98,16 @@ class PyApp(gtk.Window):
         if self.current_directory == None:
             return
 
+        if self.current_directory == "/":
+            self.upButton.set_sensitive(False)
+        else:
+            self.upButton.set_sensitive(True)
+
+        if self.current_directory == self.home_directory:
+            self.homeButton.set_sensitive(False)
+        else:
+            self.homeButton.set_sensitive(True)
+
         alpha_sorted = []
         for fl in os.listdir(self.current_directory):
         
@@ -115,7 +125,6 @@ class PyApp(gtk.Window):
     def on_home_clicked(self, widget):
         self.current_directory = os.path.realpath(os.path.expanduser('~'))
         self.fill_store()
-        self.upButton.set_sensitive(True)
         
     
     def on_item_activated(self, widget, item):
@@ -129,15 +138,11 @@ class PyApp(gtk.Window):
             
         self.current_directory = self.current_directory + os.path.sep + path
         self.fill_store()
-        self.upButton.set_sensitive(True)
     
 
     def on_up_clicked(self, widget):
         self.current_directory = os.path.dirname(self.current_directory)
         self.fill_store()
-        sensitive = True
-        if self.current_directory == "/": sensitive = False
-        self.upButton.set_sensitive(sensitive)
     
 
 if __name__ == '__main__':
