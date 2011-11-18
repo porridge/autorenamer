@@ -10,6 +10,9 @@
 # website: zetcode.com 
 # last edited: February 2009
 
+import gnome.ui
+import gnomevfs
+
 import gtk
 import os
 
@@ -22,6 +25,7 @@ class PyApp(gtk.Window):
     def __init__(self):
         super(PyApp, self).__init__()
         
+        self.thumb_factory = gnome.ui.ThumbnailFactory(gnome.ui.THUMBNAIL_SIZE_NORMAL)
         self.set_size_request(650, 400)
         self.set_position(gtk.WIN_POS_CENTER)
         
@@ -107,17 +111,19 @@ class PyApp(gtk.Window):
         self.saveButton.set_sensitive(False)
         self.discardButton.set_sensitive(False)
 
-        alpha_sorted = []
-        for fl in os.listdir(self.current_directory):
+        for fl in sorted(os.listdir(self.current_directory)):
         
             if not fl[0] == '.': 
-                if os.path.isdir(os.path.join(self.current_directory, fl)):
-                    alpha_sorted.append([fl, self.dirIcon, True])
+                full_path = os.path.join(self.current_directory, fl)
+                if os.path.isdir(full_path):
+                    self.store.append([fl, self.dirIcon, True])
                 else:
-                    alpha_sorted.append([fl, self.fileIcon, False])
-        alpha_sorted.sort()
-        for l in alpha_sorted:
-            self.store.append(l)
+                    icon = self.fileIcon
+                    uri = gnomevfs.get_uri_from_local_path(full_path)
+                    mime = gnomevfs.get_mime_type(uri)
+                    if self.thumb_factory.can_thumbnail(uri ,mime, 0):
+                        icon = self.thumb_factory.generate_thumbnail(uri, mime)
+                    self.store.append([fl, icon, False])
         self.store_modified_handle = self.store.connect("row-changed", self.on_row_changed)
 
     def on_row_changed(self, treemodel, path, treeiter):
@@ -132,7 +138,7 @@ class PyApp(gtk.Window):
         self.fill_store()
 
     def on_discard_clicked(self, widget):
-	    self.fill_store()
+        self.fill_store()
     
     def on_item_activated(self, widget, item):
         model = widget.get_model()
@@ -145,7 +151,7 @@ class PyApp(gtk.Window):
         if self.modified_store:
             label = gtk.Label("Save or discard first!")
             dialog = gtk.Dialog("Save or discard", self, gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-			                    (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+                                (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
             dialog.vbox.pack_start(label)
             label.show()
             dialog.run()
@@ -161,5 +167,5 @@ class PyApp(gtk.Window):
     
 
 if __name__ == '__main__':
-	PyApp()
-	gtk.main()
+    PyApp()
+    gtk.main()
