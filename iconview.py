@@ -13,6 +13,7 @@
 import gnome.ui
 import gnomevfs
 
+import math
 import gtk
 import os
 
@@ -75,6 +76,7 @@ class PyApp(gtk.Window):
         self.upButton.connect("clicked", self.on_up_clicked)
         self.homeButton.connect("clicked", self.on_home_clicked)
         self.discardButton.connect("clicked", self.on_discard_clicked)
+        self.saveButton.connect("clicked", self.on_save_clicked)
 
         self.iconView.set_text_column(COL_PATH)
         self.iconView.set_pixbuf_column(COL_PIXBUF)
@@ -111,19 +113,18 @@ class PyApp(gtk.Window):
         self.saveButton.set_sensitive(False)
         self.discardButton.set_sensitive(False)
 
-        for fl in sorted(os.listdir(self.current_directory)):
-        
-            if not fl[0] == '.': 
-                full_path = os.path.join(self.current_directory, fl)
-                if os.path.isdir(full_path):
-                    self.store.append([fl, self.dirIcon, True])
-                else:
-                    icon = self.fileIcon
-                    uri = gnomevfs.get_uri_from_local_path(full_path)
-                    mime = gnomevfs.get_mime_type(uri)
-                    if self.thumb_factory.can_thumbnail(uri ,mime, 0):
-                        icon = self.thumb_factory.generate_thumbnail(uri, mime)
-                    self.store.append([fl, icon, False])
+        self.initial_order = [f for f in sorted(os.listdir(self.current_directory)) if f[0] != "."]
+        for fl in self.initial_order:
+            full_path = os.path.join(self.current_directory, fl)
+            if os.path.isdir(full_path):
+                self.store.append([fl, self.dirIcon, True])
+            else:
+                icon = self.fileIcon
+                uri = gnomevfs.get_uri_from_local_path(full_path)
+                mime = gnomevfs.get_mime_type(uri)
+                if self.thumb_factory.can_thumbnail(uri ,mime, 0):
+                    icon = self.thumb_factory.generate_thumbnail(uri, mime)
+                self.store.append([fl, icon, False])
         self.store_modified_handle = self.store.connect("row-changed", self.on_row_changed)
 
     def on_row_changed(self, treemodel, path, treeiter):
@@ -139,7 +140,35 @@ class PyApp(gtk.Window):
 
     def on_discard_clicked(self, widget):
         self.fill_store()
-    
+
+    def on_save_clicked(self, widget):
+        self.new_order = [e[0] for e in self.store]
+        num_items = len(self.new_order)
+        width = math.ceil(math.log10(num_items))
+        fmt = "%%0%dd-%%s" % width
+        prefixed = [(fmt % (i, f)) for i, f in zip(xrange(num_items), self.new_order)]
+        conflicts = set.intersection(set(self.new_order), set(prefixed))
+        if conflicts:
+            self.pop_dialog("Cannot rename", "The following filenames conflict: %s" % conflicts)
+            return
+
+        renames = zip(self.new_order, prefixed)
+        self.pop_dialog("rename", "%s" % "\n".join([str(t) for t in renames]))
+        for source, dest in renames:
+            source = os.path.join(self.current_directory, source)
+            dest = os.path.join(self.current_directory, dest)
+            os.rename(source, dest)
+        self.fill_store()
+
+    def pop_dialog(self, title, label_text):
+        label = gtk.Label(label_text)
+        dialog = gtk.Dialog(title, self, gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+                            (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+        dialog.vbox.pack_start(label)
+        label.show()
+        dialog.run()
+        dialog.destroy()
+
     def on_item_activated(self, widget, item):
         model = widget.get_model()
         path = model[item][COL_PATH]
@@ -149,15 +178,9 @@ class PyApp(gtk.Window):
             return
 
         if self.modified_store:
-            label = gtk.Label("Save or discard first!")
-            dialog = gtk.Dialog("Save or discard", self, gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                                (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
-            dialog.vbox.pack_start(label)
-            label.show()
-            dialog.run()
-            dialog.destroy()
+            self.pop_dialog("Save or discard", "Save or discard first!")
             return
-            
+
         self.current_directory = self.current_directory + os.path.sep + path
         self.fill_store()
 
