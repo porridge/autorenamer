@@ -125,14 +125,21 @@ class PyApp(gtk.Window):
                 if self.thumb_factory.can_thumbnail(uri ,mime, 0):
                     icon = self.thumb_factory.generate_thumbnail(uri, mime)
                 self.store.append([fl, icon, False])
-        self.store_modified_handle = self.store.connect("row-changed", self.on_row_changed)
+        self.store_modified_handle = self.store.connect("row-deleted", self.on_row_deleted)
 
-    def on_row_changed(self, treemodel, path, treeiter):
-        self.modified_store = True
-        self.upButton.set_sensitive(False)
-        self.homeButton.set_sensitive(False)
-        self.saveButton.set_sensitive(True)
-        self.discardButton.set_sensitive(True)
+    def on_row_deleted(self, treemodel, path):
+        if self.initial_order == [e[0] for e in self.store]:
+            self.modified_store = False
+            self.upButton.set_sensitive(True)
+            self.homeButton.set_sensitive(True)
+            self.saveButton.set_sensitive(False)
+            self.discardButton.set_sensitive(False)
+        else:
+            self.modified_store = True
+            self.upButton.set_sensitive(False)
+            self.homeButton.set_sensitive(False)
+            self.saveButton.set_sensitive(True)
+            self.discardButton.set_sensitive(True)
 
     def on_home_clicked(self, widget):
         self.current_directory = os.path.realpath(os.path.expanduser('~'))
