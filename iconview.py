@@ -157,25 +157,51 @@ class PyApp(gtk.Window):
         prefixed = [(fmt % (i, f)) for i, f in zip(xrange(num_items), self.new_order)]
         conflicts = set.intersection(set(self.new_order), set(prefixed))
         if conflicts:
-            self.pop_dialog("Cannot rename", "The following filenames conflict: %s" % conflicts)
+            self.pop_dialog("Cannot rename", "The following filenames conflict.",
+                            column_names=("Filename",),
+                            column_values=[(c,) for c in conflicts])
             return
 
         renames = zip(self.new_order, prefixed)
-        self.pop_dialog("rename", "%s" % "\n".join([str(t) for t in renames]))
-        for source, dest in renames:
-            source = os.path.join(self.current_directory, source)
-            dest = os.path.join(self.current_directory, dest)
-            os.rename(source, dest)
-        self.fill_store()
+        if self.pop_dialog("Renames", "The following renames will be performed.",
+                           ok_only=False,
+                           column_names=("From", "To"),
+                           column_values=renames):
+            for source, dest in renames:
+                source = os.path.join(self.current_directory, source)
+                dest = os.path.join(self.current_directory, dest)
+                os.rename(source, dest)
+            self.fill_store()
 
-    def pop_dialog(self, title, label_text):
+    def pop_dialog(self, title, label_text, ok_only=True, column_names=None, column_values=None):
         label = gtk.Label(label_text)
-        dialog = gtk.Dialog(title, self, gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                            (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
-        dialog.vbox.pack_start(label)
-        label.show()
-        dialog.run()
-        dialog.destroy()
+        if ok_only:
+            buttons = (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT)
+        else:
+            buttons = (gtk.STOCK_SAVE, gtk.RESPONSE_ACCEPT, gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT)
+        dialog = gtk.Dialog(title, self, gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT, buttons)
+        dialog.vbox.props.homogeneous = False
+        dialog.vbox.pack_start(label, False)
+        if column_names is not None and column_values is not None:
+            types = [str for c in column_names]
+            store = gtk.ListStore(*types)
+            for value in column_values:
+                store.append(value)
+            list_view = gtk.TreeView(store)
+            list_view.set_reorderable(False)
+            sw = gtk.ScrolledWindow()
+            sw.set_shadow_type(gtk.SHADOW_ETCHED_IN)
+            sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+            for name, offset in zip(column_names, range(len(column_names))):
+                list_view.append_column(gtk.TreeViewColumn(name, gtk.CellRendererText(), text=offset))
+            sw.add(list_view)
+            dialog.vbox.pack_start(sw, True, True, 0)
+        dialog.show_all()
+        try:
+            return dialog.run() == gtk.RESPONSE_ACCEPT
+        finally:
+            dialog.destroy()
+
 
     def on_item_activated(self, widget, item):
         model = widget.get_model()
