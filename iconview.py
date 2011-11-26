@@ -20,7 +20,7 @@ import os
 COL_PATH = 0
 COL_PIXBUF = 1
 COL_IS_DIRECTORY = 2
-
+APP_NAME = "Renamer"
 
 class PyApp(gtk.Window): 
     def __init__(self):
@@ -31,7 +31,7 @@ class PyApp(gtk.Window):
         self.set_position(gtk.WIN_POS_CENTER)
         
         self.connect("destroy", gtk.main_quit)
-        self.set_title("IconView")
+        self.set_title(APP_NAME)
         
         self.home_directory = os.path.realpath(os.path.expanduser('~'))
         self.current_directory = self.home_directory
@@ -114,6 +114,7 @@ class PyApp(gtk.Window):
         self.discardButton.set_sensitive(False)
 
         self.initial_order = [f for f in sorted(os.listdir(self.current_directory)) if f[0] != "."]
+        self.set_title(APP_NAME + ": " + self.current_directory)
         for fl in self.initial_order:
             full_path = os.path.join(self.current_directory, fl)
             if os.path.isdir(full_path):
