@@ -3,7 +3,7 @@ Section: utils
 Priority: extra
 Maintainer: Marcin Owsiany <porridge@debian.org>
 Build-Depends: debhelper (>= 8)
-Standards-Version: 3.8.3
+Standards-Version: 3.9.2
 Vcs-Browser: https://github.com/porridge/autorenamer
 Vcs-Git: git://github.com/porridge/autorenamer.git
 
