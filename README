@@ -1,3 +1,8 @@
+AutoRenamer - a simple program to rename files so that they sort the way you
+want.
+
+Requires Python, GTK and GNOME libraries.
+
 The program is based on an example "iconview.py" program by Jan Bodnar, from
 the PyGTK tutorial at http://zetcode.com/tutorials/pygtktutorial/
 A copy of an email from Jan, clarifying the license, follows:
