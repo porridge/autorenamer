@@ -1,0 +1,5 @@
+autorenamer (0.1-1) unstable; urgency=low
+
+  * Initial release (Closes: #650200)
+
+ -- Marcin Owsiany <porridge@debian.org>  Sun, 27 Nov 2011 17:43:38 +0000
