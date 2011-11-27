@@ -1,0 +1,25 @@
+The program is based on an example "iconview.py" program by Jan Bodnar, from
+the PyGTK tutorial at http://zetcode.com/tutorials/pygtktutorial/
+A copy of an email from Jan, clarifying the license, follows:
+
+  Hi Marcin,
+  
+  Source code is BSD licensed. Which is the most convenient license I know.
+  Which is in my words do what you want with the code; if you mention/link to the
+  code you used it is fine, but even this is not required.
+  
+  What is licensed is the content, the tutorials. They cannot be republished
+  on other sites without permission.
+  
+  Regards,
+  
+  Jan Bodnar
+  
+  On Fri, Nov 25, 2011 at 11:01 PM, Marcin Owsiany <marcin@owsiany.pl> wrote:
+  > Hello,
+  >
+  > Can you please clarify what is the license of the source code in your
+  > PyGTK tutorial? I've made a tiny utility based on your iconview.py and
+  > I'd like to publish it under a free license. That would be much easier
+  > if your code was also published under a free license :-)
+
