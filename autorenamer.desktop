@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=AutoRenamer
+GenericName=Reorder files by renaming
+Comment=Automatically rename files have them sort in given order
+Exec=autorenamer
+Terminal=false
+Categories=GNOME;GTK;Utility;FileTools;FileManager;
