@@ -1,14 +1,33 @@
 #!/usr/bin/python
+# AutoRenamer - renames files so they sort in a given order
+# Copyright 2011 Marcin Owsiany <marcin@owsiany.pl>
 
-# ZetCode PyGTK tutorial 
+# Derived from an example program from the ZetCode.com PyGTK tutorial
+# Copyright 2007-2009 Jan Bodnar
+
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions
+#  are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the Authors nor the names of its contributors
+#     may be used to endorse or promote products derived from this software
+#     without specific prior written permission.
 #
-# This example demonstrates the IconView widget.
-# It shows the contents of the currently selected
-# directory on the disk.
-#
-# author: jan bodnar
-# website: zetcode.com 
-# last edited: February 2009
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHORS AND CONTRIBUTORS ``AS IS'' AND
+#  ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHORS OR CONTRIBUTORS BE LIABLE
+#  FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+#  DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+#  OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+#  HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+#  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+#  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+#  SUCH DAMAGE.
 
 import gnome.ui
 import gnomevfs
@@ -20,25 +39,25 @@ import os
 COL_PATH = 0
 COL_PIXBUF = 1
 COL_IS_DIRECTORY = 2
-APP_NAME = "Renamer"
+APP_NAME = "AutoRenamer"
 
-class PyApp(gtk.Window): 
+class AutoRenamer(gtk.Window):
     def __init__(self):
-        super(PyApp, self).__init__()
-        
+        super(AutoRenamer, self).__init__()
+
         self.thumb_factory = gnome.ui.ThumbnailFactory(gnome.ui.THUMBNAIL_SIZE_NORMAL)
         self.set_size_request(650, 400)
         self.set_position(gtk.WIN_POS_CENTER)
-        
+
         self.connect("destroy", gtk.main_quit)
         self.set_title(APP_NAME)
-        
+
         self.home_directory = os.path.realpath(os.path.expanduser('~'))
         self.current_directory = self.home_directory
         self.store_modified_handle = None
 
         vbox = gtk.VBox(False, 0)
-       
+
         toolbar = gtk.Toolbar()
         vbox.pack_start(toolbar, False, False, 0)
 
@@ -91,7 +110,7 @@ class PyApp(gtk.Window):
     def get_icon(self, name):
         theme = gtk.icon_theme_get_default()
         return theme.load_icon(name, 48, 0)
-    
+
     def fill_store(self):
         if self.store_modified_handle:
             self.store.disconnect(self.store_modified_handle)
@@ -221,8 +240,8 @@ class PyApp(gtk.Window):
     def on_up_clicked(self, widget):
         self.current_directory = os.path.dirname(self.current_directory)
         self.fill_store()
-    
+
 
 if __name__ == '__main__':
-    PyApp()
+    AutoRenamer()
     gtk.main()
