@@ -53,7 +53,7 @@ class AutoRenamer(gtk.Window):
         self.set_title(APP_NAME)
 
         self.home_directory = os.path.realpath(os.path.expanduser('~'))
-        self.current_directory = self.home_directory
+        self.current_directory = os.path.realpath('.')
         self.store_modified_handle = None
 
         vbox = gtk.VBox(False, 0)
@@ -162,7 +162,7 @@ class AutoRenamer(gtk.Window):
             self.discardButton.set_sensitive(True)
 
     def on_home_clicked(self, widget):
-        self.current_directory = os.path.realpath(os.path.expanduser('~'))
+        self.current_directory = self.home_directory
         self.fill_store()
 
     def on_discard_clicked(self, widget):
