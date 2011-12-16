@@ -77,6 +77,16 @@ class AutoRenamer(gtk.Window):
         self.discardButton.set_is_important(True)
         toolbar.insert(self.discardButton, -1)
 
+        self.selectedToggle = gtk.ToggleToolButton()
+        self.selectedToggle.set_label("Only selected")
+        self.selectedToggle.set_is_important(True)
+        toolbar.insert(self.selectedToggle, -1)
+
+        self.dirsToggle = gtk.ToggleToolButton()
+        self.dirsToggle.set_label("Exclude directories")
+        self.dirsToggle.set_is_important(True)
+        toolbar.insert(self.dirsToggle, -1)
+
         self.fileIcon = self.get_icon(gtk.STOCK_FILE)
         self.dirIcon = self.get_icon(gtk.STOCK_DIRECTORY)
 
@@ -169,19 +179,35 @@ class AutoRenamer(gtk.Window):
         self.fill_store()
 
     def on_save_clicked(self, widget):
-        new_order = [e[0] for e in self.store]
-        num_items = len(new_order)
+        if self.selectedToggle.get_active():
+            selected_indexes = [path[0] for path in self.iconView.get_selected_items()]
+            selected_indexes.sort()
+            new_order_elements = [self.store[index] for index in selected_indexes]
+        else:
+            new_order_elements = self.store
+
+        if self.dirsToggle.get_active():
+            ordered_names_to_rename = [e[COL_PATH] for e in new_order_elements if not e[COL_IS_DIRECTORY]]
+        else:
+            ordered_names_to_rename = [e[COL_PATH] for e in new_order_elements]
+
+        if not ordered_names_to_rename:
+            self.pop_dialog("Nothing to rename", "Check the enabled options and selected elements.")
+            return
+
+        num_items = len(ordered_names_to_rename)
         width = math.ceil(math.log10(num_items))
         fmt = "%%0%dd-%%s" % width
-        prefixed = [(fmt % (i, f)) for i, f in zip(xrange(num_items), new_order)]
-        conflicts = set.intersection(set(new_order), set(prefixed))
+        prefixed = [(fmt % (i, f)) for i, f in zip(xrange(num_items), ordered_names_to_rename)]
+        all_names = [e[COL_PATH] for e in self.store]
+        conflicts = set.intersection(set(all_names), set(prefixed))
         if conflicts:
             self.pop_dialog("Cannot rename", "The following filenames conflict.",
                             column_names=("Filename",),
                             column_values=[(c,) for c in conflicts])
             return
 
-        renames = zip(new_order, prefixed)
+        renames = zip(ordered_names_to_rename, prefixed)
         if self.pop_dialog("Renames", "The following renames will be performed.",
                            ok_only=False,
                            column_names=("From", "To"),
