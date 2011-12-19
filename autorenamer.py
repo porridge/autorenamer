@@ -169,19 +169,19 @@ class AutoRenamer(gtk.Window):
         self.fill_store()
 
     def on_save_clicked(self, widget):
-        self.new_order = [e[0] for e in self.store]
-        num_items = len(self.new_order)
+        new_order = [e[0] for e in self.store]
+        num_items = len(new_order)
         width = math.ceil(math.log10(num_items))
         fmt = "%%0%dd-%%s" % width
-        prefixed = [(fmt % (i, f)) for i, f in zip(xrange(num_items), self.new_order)]
-        conflicts = set.intersection(set(self.new_order), set(prefixed))
+        prefixed = [(fmt % (i, f)) for i, f in zip(xrange(num_items), new_order)]
+        conflicts = set.intersection(set(new_order), set(prefixed))
         if conflicts:
             self.pop_dialog("Cannot rename", "The following filenames conflict.",
                             column_names=("Filename",),
                             column_values=[(c,) for c in conflicts])
             return
 
-        renames = zip(self.new_order, prefixed)
+        renames = zip(new_order, prefixed)
         if self.pop_dialog("Renames", "The following renames will be performed.",
                            ok_only=False,
                            column_names=("From", "To"),
