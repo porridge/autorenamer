@@ -77,15 +77,10 @@ class AutoRenamer(gtk.Window):
         self.discardButton.set_is_important(True)
         toolbar.insert(self.discardButton, -1)
 
-        self.selectedToggle = gtk.ToggleToolButton()
-        self.selectedToggle.set_label("Only selected")
-        self.selectedToggle.set_is_important(True)
-        toolbar.insert(self.selectedToggle, -1)
-
-        self.dirsToggle = gtk.ToggleToolButton()
-        self.dirsToggle.set_label("Exclude directories")
-        self.dirsToggle.set_is_important(True)
-        toolbar.insert(self.dirsToggle, -1)
+        self.dirsButton = gtk.ToolButton(gtk.STOCK_DIRECTORY)
+        self.dirsButton.set_label("Toggle directories")
+        self.dirsButton.set_is_important(True)
+        toolbar.insert(self.dirsButton, -1)
 
         self.fileIcon = self.get_icon(gtk.STOCK_FILE)
         self.dirIcon = self.get_icon(gtk.STOCK_DIRECTORY)
@@ -105,6 +100,7 @@ class AutoRenamer(gtk.Window):
         self.upButton.connect("clicked", self.on_up_clicked)
         self.homeButton.connect("clicked", self.on_home_clicked)
         self.discardButton.connect("clicked", self.on_discard_clicked)
+        self.dirsButton.connect("clicked", self.on_dirs_clicked)
         self.saveButton.connect("clicked", self.on_save_clicked)
 
         self.iconView.set_text_column(COL_PATH)
@@ -178,22 +174,23 @@ class AutoRenamer(gtk.Window):
     def on_discard_clicked(self, widget):
         self.fill_store()
 
+    def on_dirs_clicked(self, widget):
+        directory_paths = [(offset,) for offset, item in zip(xrange(len(self.store)), self.store) if item[COL_IS_DIRECTORY]]
+        for path in directory_paths:
+            if self.iconView.path_is_selected(path):
+                self.iconView.unselect_path(path)
+            else:
+                self.iconView.select_path(path)
+
+    def selected_elements_in_order(self):
+       selected_indexes = [path[0] for path in self.iconView.get_selected_items()]
+       selected_indexes.sort()
+       return [self.store[index] for index in selected_indexes]
+
     def on_save_clicked(self, widget):
-        if self.selectedToggle.get_active():
-            selected_indexes = [path[0] for path in self.iconView.get_selected_items()]
-            selected_indexes.sort()
-            new_order_elements = [self.store[index] for index in selected_indexes]
-        else:
-            new_order_elements = self.store
-
-        if self.dirsToggle.get_active():
-            ordered_names_to_rename = [e[COL_PATH] for e in new_order_elements if not e[COL_IS_DIRECTORY]]
-        else:
-            ordered_names_to_rename = [e[COL_PATH] for e in new_order_elements]
-
-        if not ordered_names_to_rename:
-            self.pop_dialog("Nothing to rename", "Check the enabled options and selected elements.")
-            return
+        new_order_elements = self.selected_elements_in_order() or self.store
+        rename_selected_only = new_order_elements is not self.store
+        ordered_names_to_rename = [e[COL_PATH] for e in new_order_elements]
 
         num_items = len(ordered_names_to_rename)
         width = math.ceil(math.log10(num_items))
@@ -208,7 +205,8 @@ class AutoRenamer(gtk.Window):
             return
 
         renames = zip(ordered_names_to_rename, prefixed)
-        if self.pop_dialog("Renames", "The following renames will be performed.",
+        if self.pop_dialog("Renames", "The following renames will be performed." +
+                           (rename_selected_only and "\nNote: only the selected entries are renamed." or ""),
                            ok_only=False,
                            column_names=("From", "To"),
                            column_values=renames):
