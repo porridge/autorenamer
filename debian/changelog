@@ -1,3 +1,11 @@
+autorenamer (0.2-1) unstable; urgency=low
+
+  * New upstream version. Notable changes:
+    - [af90f14] The initial directory is the working directory.
+    - Make it possible to constrain renames by selecting entries.
+
+ -- Marcin Owsiany <porridge@debian.org>  Wed, 11 Jan 2012 22:40:24 +0000
+
 autorenamer (0.1-1) unstable; urgency=low
 
   * Initial release (Closes: #650200)
