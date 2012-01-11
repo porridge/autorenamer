@@ -53,7 +53,7 @@ class AutoRenamer(gtk.Window):
         self.set_title(APP_NAME)
 
         self.home_directory = os.path.realpath(os.path.expanduser('~'))
-        self.current_directory = self.home_directory
+        self.current_directory = os.path.realpath('.')
         self.store_modified_handle = None
 
         vbox = gtk.VBox(False, 0)
@@ -77,6 +77,11 @@ class AutoRenamer(gtk.Window):
         self.discardButton.set_is_important(True)
         toolbar.insert(self.discardButton, -1)
 
+        self.dirsButton = gtk.ToolButton(gtk.STOCK_DIRECTORY)
+        self.dirsButton.set_label("Toggle directories")
+        self.dirsButton.set_is_important(True)
+        toolbar.insert(self.dirsButton, -1)
+
         self.fileIcon = self.get_icon(gtk.STOCK_FILE)
         self.dirIcon = self.get_icon(gtk.STOCK_DIRECTORY)
 
@@ -95,6 +100,7 @@ class AutoRenamer(gtk.Window):
         self.upButton.connect("clicked", self.on_up_clicked)
         self.homeButton.connect("clicked", self.on_home_clicked)
         self.discardButton.connect("clicked", self.on_discard_clicked)
+        self.dirsButton.connect("clicked", self.on_dirs_clicked)
         self.saveButton.connect("clicked", self.on_save_clicked)
 
         self.iconView.set_text_column(COL_PATH)
@@ -162,27 +168,45 @@ class AutoRenamer(gtk.Window):
             self.discardButton.set_sensitive(True)
 
     def on_home_clicked(self, widget):
-        self.current_directory = os.path.realpath(os.path.expanduser('~'))
+        self.current_directory = self.home_directory
         self.fill_store()
 
     def on_discard_clicked(self, widget):
         self.fill_store()
 
+    def on_dirs_clicked(self, widget):
+        directory_paths = [(offset,) for offset, item in zip(xrange(len(self.store)), self.store) if item[COL_IS_DIRECTORY]]
+        for path in directory_paths:
+            if self.iconView.path_is_selected(path):
+                self.iconView.unselect_path(path)
+            else:
+                self.iconView.select_path(path)
+
+    def selected_elements_in_order(self):
+       selected_indexes = [path[0] for path in self.iconView.get_selected_items()]
+       selected_indexes.sort()
+       return [self.store[index] for index in selected_indexes]
+
     def on_save_clicked(self, widget):
-        self.new_order = [e[0] for e in self.store]
-        num_items = len(self.new_order)
+        new_order_elements = self.selected_elements_in_order() or self.store
+        rename_selected_only = new_order_elements is not self.store
+        ordered_names_to_rename = [e[COL_PATH] for e in new_order_elements]
+
+        num_items = len(ordered_names_to_rename)
         width = math.ceil(math.log10(num_items))
         fmt = "%%0%dd-%%s" % width
-        prefixed = [(fmt % (i, f)) for i, f in zip(xrange(num_items), self.new_order)]
-        conflicts = set.intersection(set(self.new_order), set(prefixed))
+        prefixed = [(fmt % (i, f)) for i, f in zip(xrange(num_items), ordered_names_to_rename)]
+        all_names = [e[COL_PATH] for e in self.store]
+        conflicts = set.intersection(set(all_names), set(prefixed))
         if conflicts:
             self.pop_dialog("Cannot rename", "The following filenames conflict.",
                             column_names=("Filename",),
                             column_values=[(c,) for c in conflicts])
             return
 
-        renames = zip(self.new_order, prefixed)
-        if self.pop_dialog("Renames", "The following renames will be performed.",
+        renames = zip(ordered_names_to_rename, prefixed)
+        if self.pop_dialog("Renames", "The following renames will be performed." +
+                           (rename_selected_only and "\nNote: only the selected entries are renamed." or ""),
                            ok_only=False,
                            column_names=("From", "To"),
                            column_values=renames):
