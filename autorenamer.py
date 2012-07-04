@@ -42,6 +42,14 @@ COL_IS_DIRECTORY = 2
 APP_NAME = "AutoRenamer"
 
 class AutoRenamer(gtk.Window):
+
+
+    def close(self, unused_event, unused_data):
+        if self.modified_store:
+            return not self.pop_dialog("Discard changes?", "Do you want to exit and lose your changes?", ok_only=False, accept_save=False)
+        else:
+            return False
+
     def __init__(self):
         super(AutoRenamer, self).__init__()
 
@@ -49,7 +57,9 @@ class AutoRenamer(gtk.Window):
         self.set_size_request(650, 400)
         self.set_position(gtk.WIN_POS_CENTER)
 
+        self.connect("delete-event", self.close)
         self.connect("destroy", gtk.main_quit)
+
         self.set_title(APP_NAME)
 
         self.home_directory = os.path.realpath(os.path.expanduser('~'))
@@ -216,12 +226,14 @@ class AutoRenamer(gtk.Window):
                 os.rename(source, dest)
             self.fill_store()
 
-    def pop_dialog(self, title, label_text, ok_only=True, column_names=None, column_values=None):
+    def pop_dialog(self, title, label_text, ok_only=True, accept_save=True, column_names=None, column_values=None):
         label = gtk.Label(label_text)
         if ok_only:
             buttons = (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT)
-        else:
+        elif accept_save:
             buttons = (gtk.STOCK_SAVE, gtk.RESPONSE_ACCEPT, gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT)
+        else:
+            buttons = (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT, gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT)
         dialog = gtk.Dialog(title, self, gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT, buttons)
         dialog.vbox.props.homogeneous = False
         dialog.vbox.pack_start(label, False)
