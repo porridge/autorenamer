@@ -1,3 +1,11 @@
+autorenamer (0.3-1) unstable; urgency=low
+
+  * New upstream version.
+    - [1fbe5cd] Confirm closing window when there are unsaved changes.
+  * [86089b3] Added a homepage field.
+
+ -- Marcin Owsiany <porridge@debian.org>  Sat, 07 Jul 2012 08:19:13 +0100
+
 autorenamer (0.2-1) unstable; urgency=low
 
   * New upstream version. Notable changes:
