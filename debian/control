@@ -6,6 +6,7 @@ Build-Depends: debhelper (>= 8)
 Standards-Version: 3.9.2
 Vcs-Browser: https://github.com/porridge/autorenamer
 Vcs-Git: git://github.com/porridge/autorenamer.git
+Homepage: http://marcin.owsiany.pl/autorenamer-page
 
 Package: autorenamer
 Architecture: all
