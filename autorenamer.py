@@ -29,20 +29,20 @@
 #  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 #  SUCH DAMAGE.
 
-import gnome.ui
-import gnomevfs
-
+import logging
 import math
-import gtk
+from gi.repository import Gtk
+from gi.repository import GdkPixbuf
 import os
+
+from autorenamer import thumbnails
 
 COL_PATH = 0
 COL_PIXBUF = 1
 COL_IS_DIRECTORY = 2
 APP_NAME = "AutoRenamer"
 
-class AutoRenamer(gtk.Window):
-
+class AutoRenamer(Gtk.Window):
 
     def close(self, unused_event, unused_data):
         if self.modified_store:
@@ -53,12 +53,12 @@ class AutoRenamer(gtk.Window):
     def __init__(self):
         super(AutoRenamer, self).__init__()
 
-        self.thumb_factory = gnome.ui.ThumbnailFactory(gnome.ui.THUMBNAIL_SIZE_NORMAL)
+        self.thumbnailer = thumbnails.Thumbnailer()
         self.set_size_request(650, 400)
-        self.set_position(gtk.WIN_POS_CENTER)
+        self.set_position(Gtk.WindowPosition.CENTER)
 
         self.connect("delete-event", self.close)
-        self.connect("destroy", gtk.main_quit)
+        self.connect("destroy", Gtk.main_quit)
 
         self.set_title(APP_NAME)
 
@@ -66,46 +66,43 @@ class AutoRenamer(gtk.Window):
         self.current_directory = os.path.realpath('.')
         self.store_modified_handle = None
 
-        vbox = gtk.VBox(False, 0)
+        vbox = Gtk.VBox(False, 0)
 
-        toolbar = gtk.Toolbar()
+        toolbar = Gtk.Toolbar()
         vbox.pack_start(toolbar, False, False, 0)
 
-        self.upButton = gtk.ToolButton(gtk.STOCK_GO_UP)
+        self.upButton = Gtk.ToolButton(Gtk.STOCK_GO_UP)
         self.upButton.set_is_important(True)
         toolbar.insert(self.upButton, -1)
 
-        self.homeButton = gtk.ToolButton(gtk.STOCK_HOME)
+        self.homeButton = Gtk.ToolButton(Gtk.STOCK_HOME)
         self.homeButton.set_is_important(True)
         toolbar.insert(self.homeButton, -1)
 
-        self.saveButton = gtk.ToolButton(gtk.STOCK_SAVE)
+        self.saveButton = Gtk.ToolButton(Gtk.STOCK_SAVE)
         self.saveButton.set_is_important(True)
         toolbar.insert(self.saveButton, -1)
 
-        self.discardButton = gtk.ToolButton(gtk.STOCK_CANCEL)
+        self.discardButton = Gtk.ToolButton(Gtk.STOCK_CANCEL)
         self.discardButton.set_is_important(True)
         toolbar.insert(self.discardButton, -1)
 
-        self.dirsButton = gtk.ToolButton(gtk.STOCK_DIRECTORY)
+        self.dirsButton = Gtk.ToolButton(Gtk.STOCK_DIRECTORY)
         self.dirsButton.set_label("Toggle directories")
         self.dirsButton.set_is_important(True)
         toolbar.insert(self.dirsButton, -1)
 
-        self.fileIcon = self.get_icon(gtk.STOCK_FILE)
-        self.dirIcon = self.get_icon(gtk.STOCK_DIRECTORY)
-
-        sw = gtk.ScrolledWindow()
-        sw.set_shadow_type(gtk.SHADOW_ETCHED_IN)
-        sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        sw = Gtk.ScrolledWindow()
+        sw.set_shadow_type(Gtk.ShadowType.ETCHED_IN)
+        sw.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         vbox.pack_start(sw, True, True, 0)
 
-        self.store = gtk.ListStore(str, gtk.gdk.Pixbuf, bool)
+        self.store = Gtk.ListStore(str, GdkPixbuf.Pixbuf, bool)
         self.fill_store()
 
-        self.iconView = gtk.IconView(self.store)
+        self.iconView = Gtk.IconView(self.store)
         self.iconView.set_reorderable(True)
-        self.iconView.set_selection_mode(gtk.SELECTION_MULTIPLE)
+        self.iconView.set_selection_mode(Gtk.SelectionMode.MULTIPLE)
 
         self.upButton.connect("clicked", self.on_up_clicked)
         self.homeButton.connect("clicked", self.on_home_clicked)
@@ -122,10 +119,6 @@ class AutoRenamer(gtk.Window):
 
         self.add(vbox)
         self.show_all()
-
-    def get_icon(self, name):
-        theme = gtk.icon_theme_get_default()
-        return theme.load_icon(name, 48, 0)
 
     def fill_store(self):
         if self.store_modified_handle:
@@ -152,15 +145,8 @@ class AutoRenamer(gtk.Window):
         self.set_title(APP_NAME + ": " + self.current_directory)
         for fl in self.initial_order:
             full_path = os.path.join(self.current_directory, fl)
-            if os.path.isdir(full_path):
-                self.store.append([fl, self.dirIcon, True])
-            else:
-                icon = self.fileIcon
-                uri = gnomevfs.get_uri_from_local_path(full_path)
-                mime = gnomevfs.get_mime_type(uri)
-                if self.thumb_factory.can_thumbnail(uri ,mime, 0):
-                    icon = self.thumb_factory.generate_thumbnail(uri, mime)
-                self.store.append([fl, icon, False])
+            is_dir = os.path.isdir(full_path)
+            self.store.append([fl, self.thumbnailer.pixbuf_for(full_path, is_dir), is_dir])
         self.store_modified_handle = self.store.connect("row-deleted", self.on_row_deleted)
 
     def on_row_deleted(self, treemodel, path):
@@ -227,36 +213,35 @@ class AutoRenamer(gtk.Window):
             self.fill_store()
 
     def pop_dialog(self, title, label_text, ok_only=True, accept_save=True, column_names=None, column_values=None):
-        label = gtk.Label(label_text)
+        label = Gtk.Label(label=label_text)
         if ok_only:
-            buttons = (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT)
+            buttons = (Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT)
         elif accept_save:
-            buttons = (gtk.STOCK_SAVE, gtk.RESPONSE_ACCEPT, gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT)
+            buttons = (Gtk.STOCK_SAVE, Gtk.ResponseType.ACCEPT, Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT)
         else:
-            buttons = (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT, gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT)
-        dialog = gtk.Dialog(title, self, gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT, buttons)
+            buttons = (Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT, Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT)
+        dialog = Gtk.Dialog(title, self, Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT, buttons)
         dialog.vbox.props.homogeneous = False
         dialog.vbox.pack_start(label, False)
         if column_names is not None and column_values is not None:
             types = [str for c in column_names]
-            store = gtk.ListStore(*types)
+            store = Gtk.ListStore(*types)
             for value in column_values:
                 store.append(value)
-            list_view = gtk.TreeView(store)
+            list_view = Gtk.TreeView(store)
             list_view.set_reorderable(False)
-            sw = gtk.ScrolledWindow()
-            sw.set_shadow_type(gtk.SHADOW_ETCHED_IN)
-            sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+            sw = Gtk.ScrolledWindow()
+            sw.set_shadow_type(Gtk.ShadowType.ETCHED_IN)
+            sw.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
             for name, offset in zip(column_names, range(len(column_names))):
-                list_view.append_column(gtk.TreeViewColumn(name, gtk.CellRendererText(), text=offset))
+                list_view.append_column(Gtk.TreeViewColumn(name, Gtk.CellRendererText(), text=offset))
             sw.add(list_view)
             dialog.vbox.pack_start(sw, True, True, 0)
         dialog.show_all()
         try:
-            return dialog.run() == gtk.RESPONSE_ACCEPT
+            return dialog.run() == Gtk.ResponseType.ACCEPT
         finally:
             dialog.destroy()
-
 
     def on_item_activated(self, widget, item):
         model = widget.get_model()
@@ -279,5 +264,6 @@ class AutoRenamer(gtk.Window):
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
     AutoRenamer()
-    gtk.main()
+    Gtk.main()
