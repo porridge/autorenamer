@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # AutoRenamer - renames files so they sort in a given order
-# Copyright 2011 Marcin Owsiany <marcin@owsiany.pl>
+# Copyright 2011-2016 Marcin Owsiany <marcin@owsiany.pl>
 
 # Derived from an example program from the ZetCode.com PyGTK tutorial
 # Copyright 2007-2009 Jan Bodnar
