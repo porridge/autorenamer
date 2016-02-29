@@ -66,35 +66,40 @@ class AutoRenamer(Gtk.Window):
         self.current_directory = os.path.realpath('.')
         self.store_modified_handle = None
 
-        vbox = Gtk.VBox(False, 0)
-
-        toolbar = Gtk.Toolbar()
-        vbox.pack_start(toolbar, False, False, 0)
-
         self.upButton = Gtk.ToolButton(Gtk.STOCK_GO_UP)
         self.upButton.set_is_important(True)
-        toolbar.insert(self.upButton, -1)
+        self.upButton.connect("clicked", self.on_up_clicked)
 
         self.homeButton = Gtk.ToolButton(Gtk.STOCK_HOME)
         self.homeButton.set_is_important(True)
-        toolbar.insert(self.homeButton, -1)
+        self.homeButton.connect("clicked", self.on_home_clicked)
 
         self.saveButton = Gtk.ToolButton(Gtk.STOCK_SAVE)
         self.saveButton.set_is_important(True)
-        toolbar.insert(self.saveButton, -1)
+        self.saveButton.connect("clicked", self.on_save_clicked)
 
         self.discardButton = Gtk.ToolButton(Gtk.STOCK_CANCEL)
         self.discardButton.set_is_important(True)
-        toolbar.insert(self.discardButton, -1)
+        self.discardButton.connect("clicked", self.on_discard_clicked)
 
         self.dirsButton = Gtk.ToolButton(Gtk.STOCK_DIRECTORY)
-        self.dirsButton.set_label("Toggle directories")
         self.dirsButton.set_is_important(True)
+        self.dirsButton.set_label("Toggle directories")
+        self.dirsButton.connect("clicked", self.on_dirs_clicked)
+
+        toolbar = Gtk.Toolbar()
+        toolbar.insert(self.upButton, -1)
+        toolbar.insert(self.homeButton, -1)
+        toolbar.insert(self.saveButton, -1)
+        toolbar.insert(self.discardButton, -1)
         toolbar.insert(self.dirsButton, -1)
 
         sw = Gtk.ScrolledWindow()
         sw.set_shadow_type(Gtk.ShadowType.ETCHED_IN)
         sw.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+
+        vbox = Gtk.VBox(False, 0)
+        vbox.pack_start(toolbar, False, False, 0)
         vbox.pack_start(sw, True, True, 0)
 
         self.store = Gtk.ListStore(str, GdkPixbuf.Pixbuf, bool)
@@ -103,17 +108,10 @@ class AutoRenamer(Gtk.Window):
         self.iconView = Gtk.IconView(self.store)
         self.iconView.set_reorderable(True)
         self.iconView.set_selection_mode(Gtk.SelectionMode.MULTIPLE)
-
-        self.upButton.connect("clicked", self.on_up_clicked)
-        self.homeButton.connect("clicked", self.on_home_clicked)
-        self.discardButton.connect("clicked", self.on_discard_clicked)
-        self.dirsButton.connect("clicked", self.on_dirs_clicked)
-        self.saveButton.connect("clicked", self.on_save_clicked)
-
         self.iconView.set_text_column(COL_PATH)
         self.iconView.set_pixbuf_column(COL_PIXBUF)
-
         self.iconView.connect("item-activated", self.on_item_activated)
+
         sw.add(self.iconView)
         self.iconView.grab_focus()
 
