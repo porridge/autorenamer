@@ -2,19 +2,20 @@ Source: autorenamer
 Section: utils
 Priority: extra
 Maintainer: Marcin Owsiany <porridge@debian.org>
-Build-Depends: debhelper (>= 8)
-Standards-Version: 3.9.2
+Build-Depends: debhelper (>= 8), python, dh-python
+Standards-Version: 3.9.6
 Vcs-Browser: https://github.com/porridge/autorenamer
-Vcs-Git: git://github.com/porridge/autorenamer.git
+Vcs-Git: git://github.com/porridge/autorenamer.git -b debian
 Homepage: http://marcin.owsiany.pl/autorenamer-page
 
 Package: autorenamer
 Architecture: all
-Depends: python, python-gnome2, python-gtk2, ${misc:Depends}
+Depends: python, gir1.2-gtk-3.0, gir1.2-gdkpixbuf-2.0, gir1.2-glib-2.0, ${misc:Depends}, ${python:Depends}
 Description: program to rename files to make them sort in given order
  This is a simple graphical program that lets you reorder the files using
  drag-and-drop and then changes the names of the files such that their
- alphabetical sorting matches the ordering you chose.
+ alphabetical sorting matches the ordering you chose. You can also shuffle
+ the files.
  .
  Currently the renaming consists of prepending each filename with a short
  number.

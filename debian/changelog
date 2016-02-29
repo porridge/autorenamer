@@ -1,3 +1,20 @@
+autorenamer (0.4-1) unstable; urgency=medium
+
+  * New upstream version:
+    - [d5be76c] Port to GTK3 and redo thumbnail creation.
+    - [46d28aa] Update copyright year.
+    - [f61babb] Some reordering.
+    - [beb5c87] Disable "Toggle dirs" button if none are present.
+    - [6d28dce] Add a randomization function.
+    - [dbbf658] Fix dialog popup.
+    - [ee56909] Fix "Toggle directories".
+    - [ef8977c] Replace makefile with a setup script.
+  * Use dh_python2.
+  * Updated description, dependencies, Standards-Version, copyright years and
+    Vcs URL.
+
+ -- Marcin Owsiany <porridge@debian.org>  Wed, 02 Mar 2016 17:23:22 +0100
+
 autorenamer (0.3-1) unstable; urgency=low
 
   * New upstream version.
