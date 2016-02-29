@@ -31,6 +31,7 @@
 
 import logging
 import math
+import random
 from gi.repository import Gtk
 from gi.repository import GdkPixbuf
 import os
@@ -82,6 +83,13 @@ class AutoRenamer(Gtk.Window):
         self.discardButton.set_is_important(True)
         self.discardButton.connect("clicked", self.on_discard_clicked)
 
+        shuffle_image = Gtk.Image.new_from_icon_name("media-playlist-shuffle", Gtk.IconSize.BUTTON)
+        self.randomizeButton = Gtk.ToolButton()
+        self.randomizeButton.set_icon_widget(shuffle_image)
+        self.randomizeButton.set_is_important(True)
+        self.randomizeButton.set_label("Shuffle")
+        self.randomizeButton.connect("clicked", self.on_randomize_clicked)
+
         self.dirsButton = Gtk.ToolButton(Gtk.STOCK_DIRECTORY)
         self.dirsButton.set_is_important(True)
         self.dirsButton.set_label("Toggle directories")
@@ -92,6 +100,7 @@ class AutoRenamer(Gtk.Window):
         toolbar.insert(self.homeButton, -1)
         toolbar.insert(self.saveButton, -1)
         toolbar.insert(self.discardButton, -1)
+        toolbar.insert(self.randomizeButton, -1)
         toolbar.insert(self.dirsButton, -1)
 
         sw = Gtk.ScrolledWindow()
@@ -140,6 +149,7 @@ class AutoRenamer(Gtk.Window):
         self.discardButton.set_sensitive(False)
 
         self.initial_order = [f for f in sorted(os.listdir(self.current_directory)) if f[0] != "."]
+        self.randomizeButton.set_sensitive(bool(self.initial_order))
         self.set_title(APP_NAME + ": " + self.current_directory)
         directories_present = False
         for fl in self.initial_order:
@@ -152,6 +162,9 @@ class AutoRenamer(Gtk.Window):
         self.dirsButton.set_sensitive(directories_present)
 
     def on_row_deleted(self, treemodel, path):
+        self.on_order_changed()
+
+    def on_order_changed(self):
         if self.initial_order == [e[0] for e in self.store]:
             self.modified_store = False
             self.upButton.set_sensitive(True)
@@ -263,6 +276,12 @@ class AutoRenamer(Gtk.Window):
     def on_up_clicked(self, widget):
         self.current_directory = os.path.dirname(self.current_directory)
         self.fill_store()
+
+    def on_randomize_clicked(self, widget):
+        order = range(len(self.initial_order))
+        random.shuffle(order)
+        self.store.reorder(order)
+        self.on_order_changed()
 
 
 if __name__ == '__main__':
