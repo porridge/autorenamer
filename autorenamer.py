@@ -141,11 +141,15 @@ class AutoRenamer(Gtk.Window):
 
         self.initial_order = [f for f in sorted(os.listdir(self.current_directory)) if f[0] != "."]
         self.set_title(APP_NAME + ": " + self.current_directory)
+        directories_present = False
         for fl in self.initial_order:
             full_path = os.path.join(self.current_directory, fl)
             is_dir = os.path.isdir(full_path)
+            if is_dir:
+                directories_present = True
             self.store.append([fl, self.thumbnailer.pixbuf_for(full_path, is_dir), is_dir])
         self.store_modified_handle = self.store.connect("row-deleted", self.on_row_deleted)
+        self.dirsButton.set_sensitive(directories_present)
 
     def on_row_deleted(self, treemodel, path):
         if self.initial_order == [e[0] for e in self.store]:
