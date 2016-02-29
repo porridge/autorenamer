@@ -237,7 +237,7 @@ class AutoRenamer(Gtk.Window):
             buttons = (Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT, Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT)
         dialog = Gtk.Dialog(title, self, Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT, buttons)
         dialog.vbox.props.homogeneous = False
-        dialog.vbox.pack_start(label, False)
+        dialog.vbox.pack_start(label, False, False, 0)
         if column_names is not None and column_values is not None:
             types = [str for c in column_names]
             store = Gtk.ListStore(*types)
