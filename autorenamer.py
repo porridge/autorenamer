@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # AutoRenamer - renames files so they sort in a given order
-# Copyright 2011 Marcin Owsiany <marcin@owsiany.pl>
+# Copyright 2011-2016 Marcin Owsiany <marcin@owsiany.pl>
 
 # Derived from an example program from the ZetCode.com PyGTK tutorial
 # Copyright 2007-2009 Jan Bodnar
@@ -29,20 +29,21 @@
 #  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 #  SUCH DAMAGE.
 
-import gnome.ui
-import gnomevfs
-
+import logging
 import math
-import gtk
+import random
+from gi.repository import Gtk
+from gi.repository import GdkPixbuf
 import os
+
+from autorenamer import thumbnails
 
 COL_PATH = 0
 COL_PIXBUF = 1
 COL_IS_DIRECTORY = 2
 APP_NAME = "AutoRenamer"
 
-class AutoRenamer(gtk.Window):
-
+class AutoRenamer(Gtk.Window):
 
     def close(self, unused_event, unused_data):
         if self.modified_store:
@@ -53,12 +54,12 @@ class AutoRenamer(gtk.Window):
     def __init__(self):
         super(AutoRenamer, self).__init__()
 
-        self.thumb_factory = gnome.ui.ThumbnailFactory(gnome.ui.THUMBNAIL_SIZE_NORMAL)
+        self.thumbnailer = thumbnails.Thumbnailer()
         self.set_size_request(650, 400)
-        self.set_position(gtk.WIN_POS_CENTER)
+        self.set_position(Gtk.WindowPosition.CENTER)
 
         self.connect("delete-event", self.close)
-        self.connect("destroy", gtk.main_quit)
+        self.connect("destroy", Gtk.main_quit)
 
         self.set_title(APP_NAME)
 
@@ -66,66 +67,65 @@ class AutoRenamer(gtk.Window):
         self.current_directory = os.path.realpath('.')
         self.store_modified_handle = None
 
-        vbox = gtk.VBox(False, 0)
-
-        toolbar = gtk.Toolbar()
-        vbox.pack_start(toolbar, False, False, 0)
-
-        self.upButton = gtk.ToolButton(gtk.STOCK_GO_UP)
+        self.upButton = Gtk.ToolButton(Gtk.STOCK_GO_UP)
         self.upButton.set_is_important(True)
-        toolbar.insert(self.upButton, -1)
-
-        self.homeButton = gtk.ToolButton(gtk.STOCK_HOME)
-        self.homeButton.set_is_important(True)
-        toolbar.insert(self.homeButton, -1)
-
-        self.saveButton = gtk.ToolButton(gtk.STOCK_SAVE)
-        self.saveButton.set_is_important(True)
-        toolbar.insert(self.saveButton, -1)
-
-        self.discardButton = gtk.ToolButton(gtk.STOCK_CANCEL)
-        self.discardButton.set_is_important(True)
-        toolbar.insert(self.discardButton, -1)
-
-        self.dirsButton = gtk.ToolButton(gtk.STOCK_DIRECTORY)
-        self.dirsButton.set_label("Toggle directories")
-        self.dirsButton.set_is_important(True)
-        toolbar.insert(self.dirsButton, -1)
-
-        self.fileIcon = self.get_icon(gtk.STOCK_FILE)
-        self.dirIcon = self.get_icon(gtk.STOCK_DIRECTORY)
-
-        sw = gtk.ScrolledWindow()
-        sw.set_shadow_type(gtk.SHADOW_ETCHED_IN)
-        sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        vbox.pack_start(sw, True, True, 0)
-
-        self.store = gtk.ListStore(str, gtk.gdk.Pixbuf, bool)
-        self.fill_store()
-
-        self.iconView = gtk.IconView(self.store)
-        self.iconView.set_reorderable(True)
-        self.iconView.set_selection_mode(gtk.SELECTION_MULTIPLE)
-
         self.upButton.connect("clicked", self.on_up_clicked)
+
+        self.homeButton = Gtk.ToolButton(Gtk.STOCK_HOME)
+        self.homeButton.set_is_important(True)
         self.homeButton.connect("clicked", self.on_home_clicked)
-        self.discardButton.connect("clicked", self.on_discard_clicked)
-        self.dirsButton.connect("clicked", self.on_dirs_clicked)
+
+        self.saveButton = Gtk.ToolButton(Gtk.STOCK_SAVE)
+        self.saveButton.set_is_important(True)
         self.saveButton.connect("clicked", self.on_save_clicked)
 
+        self.discardButton = Gtk.ToolButton(Gtk.STOCK_CANCEL)
+        self.discardButton.set_is_important(True)
+        self.discardButton.connect("clicked", self.on_discard_clicked)
+
+        shuffle_image = Gtk.Image.new_from_icon_name("media-playlist-shuffle", Gtk.IconSize.BUTTON)
+        self.randomizeButton = Gtk.ToolButton()
+        self.randomizeButton.set_icon_widget(shuffle_image)
+        self.randomizeButton.set_is_important(True)
+        self.randomizeButton.set_label("Shuffle")
+        self.randomizeButton.connect("clicked", self.on_randomize_clicked)
+
+        self.dirsButton = Gtk.ToolButton(Gtk.STOCK_DIRECTORY)
+        self.dirsButton.set_is_important(True)
+        self.dirsButton.set_label("Toggle directories")
+        self.dirsButton.connect("clicked", self.on_dirs_clicked)
+
+        toolbar = Gtk.Toolbar()
+        toolbar.insert(self.upButton, -1)
+        toolbar.insert(self.homeButton, -1)
+        toolbar.insert(self.saveButton, -1)
+        toolbar.insert(self.discardButton, -1)
+        toolbar.insert(self.randomizeButton, -1)
+        toolbar.insert(self.dirsButton, -1)
+
+        sw = Gtk.ScrolledWindow()
+        sw.set_shadow_type(Gtk.ShadowType.ETCHED_IN)
+        sw.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+
+        vbox = Gtk.VBox(False, 0)
+        vbox.pack_start(toolbar, False, False, 0)
+        vbox.pack_start(sw, True, True, 0)
+
+        self.store = Gtk.ListStore(str, GdkPixbuf.Pixbuf, bool)
+        self.fill_store()
+
+        self.iconView = Gtk.IconView(self.store)
+        self.iconView.set_reorderable(True)
+        self.iconView.set_selection_mode(Gtk.SelectionMode.MULTIPLE)
         self.iconView.set_text_column(COL_PATH)
         self.iconView.set_pixbuf_column(COL_PIXBUF)
-
         self.iconView.connect("item-activated", self.on_item_activated)
+
         sw.add(self.iconView)
         self.iconView.grab_focus()
 
         self.add(vbox)
         self.show_all()
-
-    def get_icon(self, name):
-        theme = gtk.icon_theme_get_default()
-        return theme.load_icon(name, 48, 0)
 
     def fill_store(self):
         if self.store_modified_handle:
@@ -149,21 +149,22 @@ class AutoRenamer(gtk.Window):
         self.discardButton.set_sensitive(False)
 
         self.initial_order = [f for f in sorted(os.listdir(self.current_directory)) if f[0] != "."]
+        self.randomizeButton.set_sensitive(bool(self.initial_order))
         self.set_title(APP_NAME + ": " + self.current_directory)
+        directories_present = False
         for fl in self.initial_order:
             full_path = os.path.join(self.current_directory, fl)
-            if os.path.isdir(full_path):
-                self.store.append([fl, self.dirIcon, True])
-            else:
-                icon = self.fileIcon
-                uri = gnomevfs.get_uri_from_local_path(full_path)
-                mime = gnomevfs.get_mime_type(uri)
-                if self.thumb_factory.can_thumbnail(uri ,mime, 0):
-                    icon = self.thumb_factory.generate_thumbnail(uri, mime)
-                self.store.append([fl, icon, False])
+            is_dir = os.path.isdir(full_path)
+            if is_dir:
+                directories_present = True
+            self.store.append([fl, self.thumbnailer.pixbuf_for(full_path, is_dir), is_dir])
         self.store_modified_handle = self.store.connect("row-deleted", self.on_row_deleted)
+        self.dirsButton.set_sensitive(directories_present)
 
     def on_row_deleted(self, treemodel, path):
+        self.on_order_changed()
+
+    def on_order_changed(self):
         if self.initial_order == [e[0] for e in self.store]:
             self.modified_store = False
             self.upButton.set_sensitive(True)
@@ -185,17 +186,19 @@ class AutoRenamer(gtk.Window):
         self.fill_store()
 
     def on_dirs_clicked(self, widget):
-        directory_paths = [(offset,) for offset, item in zip(xrange(len(self.store)), self.store) if item[COL_IS_DIRECTORY]]
-        for path in directory_paths:
+        all_store_indices = xrange(len(self.store))
+        directory_indices = [index for index, item in zip(all_store_indices, self.store) if item[COL_IS_DIRECTORY]]
+        for index in directory_indices:
+            path = Gtk.TreePath(index)
             if self.iconView.path_is_selected(path):
                 self.iconView.unselect_path(path)
             else:
                 self.iconView.select_path(path)
 
     def selected_elements_in_order(self):
-       selected_indexes = [path[0] for path in self.iconView.get_selected_items()]
-       selected_indexes.sort()
-       return [self.store[index] for index in selected_indexes]
+       selected_indices = [path[0] for path in self.iconView.get_selected_items()]
+       selected_indices.sort()
+       return [self.store[index] for index in selected_indices]
 
     def on_save_clicked(self, widget):
         new_order_elements = self.selected_elements_in_order() or self.store
@@ -227,36 +230,35 @@ class AutoRenamer(gtk.Window):
             self.fill_store()
 
     def pop_dialog(self, title, label_text, ok_only=True, accept_save=True, column_names=None, column_values=None):
-        label = gtk.Label(label_text)
+        label = Gtk.Label(label=label_text)
         if ok_only:
-            buttons = (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT)
+            buttons = (Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT)
         elif accept_save:
-            buttons = (gtk.STOCK_SAVE, gtk.RESPONSE_ACCEPT, gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT)
+            buttons = (Gtk.STOCK_SAVE, Gtk.ResponseType.ACCEPT, Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT)
         else:
-            buttons = (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT, gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT)
-        dialog = gtk.Dialog(title, self, gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT, buttons)
+            buttons = (Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT, Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT)
+        dialog = Gtk.Dialog(title, self, Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT, buttons)
         dialog.vbox.props.homogeneous = False
-        dialog.vbox.pack_start(label, False)
+        dialog.vbox.pack_start(label, False, False, 0)
         if column_names is not None and column_values is not None:
             types = [str for c in column_names]
-            store = gtk.ListStore(*types)
+            store = Gtk.ListStore(*types)
             for value in column_values:
                 store.append(value)
-            list_view = gtk.TreeView(store)
+            list_view = Gtk.TreeView(store)
             list_view.set_reorderable(False)
-            sw = gtk.ScrolledWindow()
-            sw.set_shadow_type(gtk.SHADOW_ETCHED_IN)
-            sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+            sw = Gtk.ScrolledWindow()
+            sw.set_shadow_type(Gtk.ShadowType.ETCHED_IN)
+            sw.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
             for name, offset in zip(column_names, range(len(column_names))):
-                list_view.append_column(gtk.TreeViewColumn(name, gtk.CellRendererText(), text=offset))
+                list_view.append_column(Gtk.TreeViewColumn(name, Gtk.CellRendererText(), text=offset))
             sw.add(list_view)
             dialog.vbox.pack_start(sw, True, True, 0)
         dialog.show_all()
         try:
-            return dialog.run() == gtk.RESPONSE_ACCEPT
+            return dialog.run() == Gtk.ResponseType.ACCEPT
         finally:
             dialog.destroy()
-
 
     def on_item_activated(self, widget, item):
         model = widget.get_model()
@@ -277,7 +279,14 @@ class AutoRenamer(gtk.Window):
         self.current_directory = os.path.dirname(self.current_directory)
         self.fill_store()
 
+    def on_randomize_clicked(self, widget):
+        order = range(len(self.initial_order))
+        random.shuffle(order)
+        self.store.reorder(order)
+        self.on_order_changed()
+
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
     AutoRenamer()
-    gtk.main()
+    Gtk.main()
