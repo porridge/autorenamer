@@ -186,17 +186,19 @@ class AutoRenamer(Gtk.Window):
         self.fill_store()
 
     def on_dirs_clicked(self, widget):
-        directory_paths = [(offset,) for offset, item in zip(xrange(len(self.store)), self.store) if item[COL_IS_DIRECTORY]]
-        for path in directory_paths:
+        all_store_indices = xrange(len(self.store))
+        directory_indices = [index for index, item in zip(all_store_indices, self.store) if item[COL_IS_DIRECTORY]]
+        for index in directory_indices:
+            path = Gtk.TreePath(index)
             if self.iconView.path_is_selected(path):
                 self.iconView.unselect_path(path)
             else:
                 self.iconView.select_path(path)
 
     def selected_elements_in_order(self):
-       selected_indexes = [path[0] for path in self.iconView.get_selected_items()]
-       selected_indexes.sort()
-       return [self.store[index] for index in selected_indexes]
+       selected_indices = [path[0] for path in self.iconView.get_selected_items()]
+       selected_indices.sort()
+       return [self.store[index] for index in selected_indices]
 
     def on_save_clicked(self, widget):
         new_order_elements = self.selected_elements_in_order() or self.store
