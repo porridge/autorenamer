@@ -5,7 +5,7 @@ Maintainer: Marcin Owsiany <porridge@debian.org>
 Build-Depends: debhelper (>= 8), python, dh-python
 Standards-Version: 3.9.6
 Vcs-Browser: https://github.com/porridge/autorenamer
-Vcs-Git: git://github.com/porridge/autorenamer.git -b debian
+Vcs-Git: https://github.com/porridge/autorenamer.git -b debian
 Homepage: http://marcin.owsiany.pl/autorenamer-page
 
 Package: autorenamer
