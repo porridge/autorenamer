@@ -42,6 +42,7 @@ COL_PATH = 0
 COL_PIXBUF = 1
 COL_IS_DIRECTORY = 2
 APP_NAME = "AutoRenamer"
+DEFAULT_WINDOW_WIDTH = 650
 
 class AutoRenamer(Gtk.Window):
 
@@ -55,7 +56,7 @@ class AutoRenamer(Gtk.Window):
         super(AutoRenamer, self).__init__()
 
         self.thumbnailer = thumbnails.Thumbnailer()
-        self.set_size_request(650, 400)
+        self.set_size_request(DEFAULT_WINDOW_WIDTH, 400)
         self.set_position(Gtk.WindowPosition.CENTER)
 
         self.connect("delete-event", self.close)
@@ -238,7 +239,7 @@ class AutoRenamer(Gtk.Window):
         else:
             buttons = (Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT, Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT)
         dialog = Gtk.Dialog(title, self, Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT, buttons)
-        dialog.vbox.props.homogeneous = False
+        dialog.vbox.props.homogeneous = False  # Let children differ in size.
         dialog.vbox.pack_start(label, False, False, 0)
         if column_names is not None and column_values is not None:
             types = [str for c in column_names]
@@ -247,11 +248,11 @@ class AutoRenamer(Gtk.Window):
                 store.append(value)
             list_view = Gtk.TreeView(store)
             list_view.set_reorderable(False)
+            for name, offset in zip(column_names, range(len(column_names))):
+                list_view.append_column(Gtk.TreeViewColumn(name, Gtk.CellRendererText(), text=offset))
             sw = Gtk.ScrolledWindow()
             sw.set_shadow_type(Gtk.ShadowType.ETCHED_IN)
             sw.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
-            for name, offset in zip(column_names, range(len(column_names))):
-                list_view.append_column(Gtk.TreeViewColumn(name, Gtk.CellRendererText(), text=offset))
             sw.add(list_view)
             dialog.vbox.pack_start(sw, True, True, 0)
         dialog.show_all()
