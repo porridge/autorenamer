@@ -186,7 +186,7 @@ class AutoRenamer(Gtk.Window):
         self.fill_store()
 
     def on_dirs_clicked(self, widget):
-        all_store_indices = xrange(len(self.store))
+        all_store_indices = range(len(self.store))
         directory_indices = [index for index, item in zip(all_store_indices, self.store) if item[COL_IS_DIRECTORY]]
         for index in directory_indices:
             path = Gtk.TreePath(index)
@@ -208,7 +208,7 @@ class AutoRenamer(Gtk.Window):
         num_items = len(ordered_names_to_rename)
         width = math.ceil(math.log10(num_items))
         fmt = "%%0%dd-%%s" % width
-        prefixed = [(fmt % (i, f)) for i, f in zip(xrange(num_items), ordered_names_to_rename)]
+        prefixed = [(fmt % (i, f)) for i, f in zip(range(num_items), ordered_names_to_rename)]
         all_names = [e[COL_PATH] for e in self.store]
         conflicts = set.intersection(set(all_names), set(prefixed))
         if conflicts:
