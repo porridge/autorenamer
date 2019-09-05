@@ -3,7 +3,7 @@
 from distutils.core import setup
 
 setup(name='Autorenamer',
-      version='0.4',
+      version='0.5',
       description='Rrename files to make them sort in given order.',
       author='Marcin Owsiany',
       author_email='marcin@owsiany.pl',
