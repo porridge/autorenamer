@@ -1,2 +1,0 @@
-?package(autorenamer):needs="X11" section="Applications/File Management"\
-  title="AutoRenamer" command="/usr/bin/autorenamer"
