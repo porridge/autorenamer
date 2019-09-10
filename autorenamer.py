@@ -1,6 +1,6 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # AutoRenamer - renames files so they sort in a given order
-# Copyright 2011-2016 Marcin Owsiany <marcin@owsiany.pl>
+# Copyright 2011-2019 Marcin Owsiany <marcin@owsiany.pl>
 
 # Derived from an example program from the ZetCode.com PyGTK tutorial
 # Copyright 2007-2009 Jan Bodnar
@@ -42,6 +42,7 @@ COL_PATH = 0
 COL_PIXBUF = 1
 COL_IS_DIRECTORY = 2
 APP_NAME = "AutoRenamer"
+DEFAULT_WINDOW_WIDTH = 650
 
 class AutoRenamer(Gtk.Window):
 
@@ -55,7 +56,7 @@ class AutoRenamer(Gtk.Window):
         super(AutoRenamer, self).__init__()
 
         self.thumbnailer = thumbnails.Thumbnailer()
-        self.set_size_request(650, 400)
+        self.set_size_request(DEFAULT_WINDOW_WIDTH, 400)
         self.set_position(Gtk.WindowPosition.CENTER)
 
         self.connect("delete-event", self.close)
@@ -186,8 +187,7 @@ class AutoRenamer(Gtk.Window):
         self.fill_store()
 
     def on_dirs_clicked(self, widget):
-        all_store_indices = xrange(len(self.store))
-        directory_indices = [index for index, item in zip(all_store_indices, self.store) if item[COL_IS_DIRECTORY]]
+        directory_indices = [index for index, item in enumerate(self.store) if item[COL_IS_DIRECTORY]]
         for index in directory_indices:
             path = Gtk.TreePath(index)
             if self.iconView.path_is_selected(path):
@@ -208,7 +208,7 @@ class AutoRenamer(Gtk.Window):
         num_items = len(ordered_names_to_rename)
         width = math.ceil(math.log10(num_items))
         fmt = "%%0%dd-%%s" % width
-        prefixed = [(fmt % (i, f)) for i, f in zip(xrange(num_items), ordered_names_to_rename)]
+        prefixed = [(fmt % (i, f)) for i, f in enumerate(ordered_names_to_rename)]
         all_names = [e[COL_PATH] for e in self.store]
         conflicts = set.intersection(set(all_names), set(prefixed))
         if conflicts:
@@ -217,7 +217,7 @@ class AutoRenamer(Gtk.Window):
                             column_values=[(c,) for c in conflicts])
             return
 
-        renames = zip(ordered_names_to_rename, prefixed)
+        renames = list(zip(ordered_names_to_rename, prefixed))
         if self.pop_dialog("Renames", "The following renames will be performed." +
                            (rename_selected_only and "\nNote: only the selected entries are renamed." or ""),
                            ok_only=False,
@@ -238,7 +238,7 @@ class AutoRenamer(Gtk.Window):
         else:
             buttons = (Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT, Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT)
         dialog = Gtk.Dialog(title, self, Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT, buttons)
-        dialog.vbox.props.homogeneous = False
+        dialog.vbox.props.homogeneous = False  # Let children differ in size.
         dialog.vbox.pack_start(label, False, False, 0)
         if column_names is not None and column_values is not None:
             types = [str for c in column_names]
@@ -247,11 +247,11 @@ class AutoRenamer(Gtk.Window):
                 store.append(value)
             list_view = Gtk.TreeView(store)
             list_view.set_reorderable(False)
+            for offset, name in enumerate(column_names):
+                list_view.append_column(Gtk.TreeViewColumn(name, Gtk.CellRendererText(), text=offset))
             sw = Gtk.ScrolledWindow()
             sw.set_shadow_type(Gtk.ShadowType.ETCHED_IN)
             sw.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
-            for name, offset in zip(column_names, range(len(column_names))):
-                list_view.append_column(Gtk.TreeViewColumn(name, Gtk.CellRendererText(), text=offset))
             sw.add(list_view)
             dialog.vbox.pack_start(sw, True, True, 0)
         dialog.show_all()
@@ -280,7 +280,7 @@ class AutoRenamer(Gtk.Window):
         self.fill_store()
 
     def on_randomize_clicked(self, widget):
-        order = range(len(self.initial_order))
+        order = list(range(len(self.initial_order)))
         random.shuffle(order)
         self.store.reorder(order)
         self.on_order_changed()
