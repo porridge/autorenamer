@@ -11,6 +11,7 @@ Homepage: http://marcin.owsiany.pl/autorenamer-page
 Package: autorenamer
 Architecture: all
 Depends: ${misc:Depends}, ${python3:Depends}, gir1.2-gtk-3.0, gir1.2-gdkpixbuf-2.0, gir1.2-glib-2.0
+Recommends: ${misc:Recommends}, ${python3:Recommends}, gir1.2-gnomedesktop-3.0
 Description: program to rename files to make them sort in given order
  This is a simple graphical program that lets you reorder the files using
  drag-and-drop and then changes the names of the files such that their
