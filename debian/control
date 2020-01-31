@@ -3,7 +3,7 @@ Section: utils
 Priority: optional
 Maintainer: Marcin Owsiany <porridge@debian.org>
 Build-Depends: debhelper-compat (= 12), python3, dh-python
-Standards-Version: 4.4.0
+Standards-Version: 4.4.1
 Vcs-Browser: https://github.com/porridge/autorenamer
 Vcs-Git: https://github.com/porridge/autorenamer.git -b debian
 Homepage: http://marcin.owsiany.pl/autorenamer-page
