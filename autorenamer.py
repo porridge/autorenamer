@@ -295,7 +295,17 @@ class AutoRenamer(Gtk.Window):
         self.on_order_changed()
 
 
-if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
+def main():
+    import argparse
+    parser = argparse.ArgumentParser(description='Interactively rename files to reorder them.')
+    parser.add_argument('--debug', action='store_true', help='Turn on debug-level logging.')
+    args = parser.parse_args()
+
+    logging.basicConfig(level=(logging.DEBUG if args.debug else logging.INFO))
+
     AutoRenamer()
     Gtk.main()
+
+
+if __name__ == '__main__':
+    main()
