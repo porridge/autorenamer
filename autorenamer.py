@@ -31,10 +31,14 @@
 
 import logging
 import math
-import random
-from gi.repository import Gtk
-from gi.repository import GdkPixbuf
 import os
+import random
+
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
+gi.require_version('GnomeDesktop', '3.0')
+from gi.repository import GdkPixbuf
 
 from autorenamer import thumbnails
 
@@ -68,19 +72,19 @@ class AutoRenamer(Gtk.Window):
         self.current_directory = os.path.realpath('.')
         self.store_modified_handle = None
 
-        self.upButton = Gtk.ToolButton(Gtk.STOCK_GO_UP)
+        self.upButton = Gtk.ToolButton(stock_id=Gtk.STOCK_GO_UP)
         self.upButton.set_is_important(True)
         self.upButton.connect("clicked", self.on_up_clicked)
 
-        self.homeButton = Gtk.ToolButton(Gtk.STOCK_HOME)
+        self.homeButton = Gtk.ToolButton(stock_id=Gtk.STOCK_HOME)
         self.homeButton.set_is_important(True)
         self.homeButton.connect("clicked", self.on_home_clicked)
 
-        self.saveButton = Gtk.ToolButton(Gtk.STOCK_SAVE)
+        self.saveButton = Gtk.ToolButton(stock_id=Gtk.STOCK_SAVE)
         self.saveButton.set_is_important(True)
         self.saveButton.connect("clicked", self.on_save_clicked)
 
-        self.discardButton = Gtk.ToolButton(Gtk.STOCK_CANCEL)
+        self.discardButton = Gtk.ToolButton(stock_id=Gtk.STOCK_CANCEL)
         self.discardButton.set_is_important(True)
         self.discardButton.connect("clicked", self.on_discard_clicked)
 
@@ -91,7 +95,7 @@ class AutoRenamer(Gtk.Window):
         self.randomizeButton.set_label("Shuffle")
         self.randomizeButton.connect("clicked", self.on_randomize_clicked)
 
-        self.dirsButton = Gtk.ToolButton(Gtk.STOCK_DIRECTORY)
+        self.dirsButton = Gtk.ToolButton(stock_id=Gtk.STOCK_DIRECTORY)
         self.dirsButton.set_is_important(True)
         self.dirsButton.set_label("Toggle directories")
         self.dirsButton.connect("clicked", self.on_dirs_clicked)
@@ -108,14 +112,14 @@ class AutoRenamer(Gtk.Window):
         sw.set_shadow_type(Gtk.ShadowType.ETCHED_IN)
         sw.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
 
-        vbox = Gtk.VBox(False, 0)
+        vbox = Gtk.VBox()
         vbox.pack_start(toolbar, False, False, 0)
         vbox.pack_start(sw, True, True, 0)
 
         self.store = Gtk.ListStore(str, GdkPixbuf.Pixbuf, bool)
         self.fill_store()
 
-        self.iconView = Gtk.IconView(self.store)
+        self.iconView = Gtk.IconView(model=self.store)
         self.iconView.set_reorderable(True)
         self.iconView.set_selection_mode(Gtk.SelectionMode.MULTIPLE)
         self.iconView.set_text_column(COL_PATH)
@@ -231,13 +235,18 @@ class AutoRenamer(Gtk.Window):
 
     def pop_dialog(self, title, label_text, ok_only=True, accept_save=True, column_names=None, column_values=None):
         label = Gtk.Label(label=label_text)
+        dialog = Gtk.Dialog(title=title, parent=self, modal=True, destroy_with_parent=True)
         if ok_only:
-            buttons = (Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT)
+            dialog.add_button(Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT)
         elif accept_save:
-            buttons = (Gtk.STOCK_SAVE, Gtk.ResponseType.ACCEPT, Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT)
+            dialog.add_buttons(
+                    Gtk.STOCK_SAVE, Gtk.ResponseType.ACCEPT,
+                    Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT)
         else:
-            buttons = (Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT, Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT)
-        dialog = Gtk.Dialog(title, self, Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT, buttons)
+            dialog.add_buttons(
+                    Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT,
+                    Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT)
+
         dialog.vbox.props.homogeneous = False  # Let children differ in size.
         dialog.vbox.pack_start(label, False, False, 0)
         if column_names is not None and column_values is not None:
@@ -245,7 +254,7 @@ class AutoRenamer(Gtk.Window):
             store = Gtk.ListStore(*types)
             for value in column_values:
                 store.append(value)
-            list_view = Gtk.TreeView(store)
+            list_view = Gtk.TreeView(model=store)
             list_view.set_reorderable(False)
             for offset, name in enumerate(column_names):
                 list_view.append_column(Gtk.TreeViewColumn(name, Gtk.CellRendererText(), text=offset))
@@ -286,7 +295,17 @@ class AutoRenamer(Gtk.Window):
         self.on_order_changed()
 
 
-if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
+def main():
+    import argparse
+    parser = argparse.ArgumentParser(description='Interactively rename files to reorder them.')
+    parser.add_argument('--debug', action='store_true', help='Turn on debug-level logging.')
+    args = parser.parse_args()
+
+    logging.basicConfig(level=(logging.DEBUG if args.debug else logging.INFO))
+
     AutoRenamer()
     Gtk.main()
+
+
+if __name__ == '__main__':
+    main()
