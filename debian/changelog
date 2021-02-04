@@ -1,3 +1,15 @@
+autorenamer (0.6-1) unstable; urgency=low
+
+  * New upstream version
+    - fix gobject deprecation warnings
+    - install the desktop file
+    - make debug logging opt-in.
+  * Bumped standards-version to 4.5.1
+    - no changes needed
+  * Added a debian/watch file
+
+ -- Marcin Owsiany <porridge@debian.org>  Mon, 01 Feb 2021 08:39:42 +0100
+
 autorenamer (0.5-2) unstable; urgency=low
 
   * Added recommends on gir1.2-gnomedesktop-3.0 for thumbnail support
