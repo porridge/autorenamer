@@ -9,5 +9,7 @@ setup(name='Autorenamer',
       author_email='marcin@owsiany.pl',
       url='http://marcin.owsiany.pl/autorenamer-page',
       packages=['autorenamer'],
-      scripts=['autorenamer.py'])
-
+      scripts=['autorenamer.py'],
+      data_files = [
+          ('share/applications', ['autorenamer.desktop']),
+      ])
