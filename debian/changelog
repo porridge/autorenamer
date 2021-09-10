@@ -8,6 +8,7 @@ autorenamer (0.6-2) UNRELEASED; urgency=medium
     debian/compat.
   * Bump debhelper from old 10 to 13.
   * Set debhelper-compat version in Build-Depends.
+  * Set upstream metadata fields: Bug-Database, Bug-Submit.
 
  -- Debian Janitor <janitor@jelmer.uk>  Mon, 07 Jun 2021 15:55:15 -0000
 
