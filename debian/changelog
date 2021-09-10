@@ -4,6 +4,8 @@ autorenamer (0.6-2) UNRELEASED; urgency=medium
     + Build-Depends: Drop versioned constraint on debhelper.
   * Use versioned copyright format URI.
   * Use secure URI in Homepage field.
+  * Bump debhelper dependency to >= 10, since that's what is used in
+    debian/compat.
 
  -- Debian Janitor <janitor@jelmer.uk>  Mon, 07 Jun 2021 15:55:15 -0000
 
